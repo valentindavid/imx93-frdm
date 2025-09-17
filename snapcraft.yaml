@@ -53,11 +53,8 @@ parts:
     source: https://gitlab.com/u-boot/u-boot.git
     source-commit: 7a4f3c5652157cbb3d26a7728bfe537ea483efc9
     plugin: nil
-    override-pull: |
-      craftctl default
-      cp "${CRAFT_STAGE}"/*.{bin,img} .
-
     override-build: |
+      cp "${CRAFT_STAGE}"/*.{bin,img} .
       make imx93_frdm_defconfig
       make all
       install -Dm644 -t "${CRAFT_PART_INSTALL}" flash.bin
