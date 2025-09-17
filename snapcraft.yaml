@@ -23,9 +23,10 @@ parts:
     source-checksum: sha256/c3447f0f813415ccea9dc2ef12080cb3ac8bbc0c67392a74fc7d59205eb5a672
     plugin: nil
     override-build: |
-      install -Dm644 -t "${CRAFT_PART_INSTALL}" firmware-imx-8.21.bin
+      sh firmware-imx-8.21.bin --auto-accept
+      install -Dm644 -t "${CRAFT_PART_INSTALL}" firmware-imx-8.21/firmware/ddr/synopsys/lpddr4*.bin
     prime:
-      - -firmware-imx-8.21.bin
+      - -*.bin
 
   firmware-sentinel:
     source: https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/firmware-sentinel-0.11.bin
@@ -33,9 +34,10 @@ parts:
     source-checksum: sha256/269480417a8ae9aa4cc4101ab947287fc33455a931021dbdc4d9badb5212bceb
     plugin: nil
     override-build: |
-      install -Dm644 -t "${CRAFT_PART_INSTALL}" firmware-sentinel-0.11.bin
+      sh firmware-sentinel-0.11.bin --auto-accept
+      install -Dm644 -t "${CRAFT_PART_INSTALL}" firmware-sentinel-0.11/mx93a1-ahab-container.img
     prime:
-      - -firmware-sentinel-0.11.bin
+      - -*.img
 
   u-boot:
     after:
@@ -53,7 +55,7 @@ parts:
     plugin: nil
     override-pull: |
       craftctl default
-      cp "${CRAFT_STAGE}"/*.bin .
+      cp "${CRAFT_STAGE}"/*.{bin,img} .
 
     override-build: |
       make imx93_frdm_defconfig
