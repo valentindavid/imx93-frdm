@@ -1,0 +1,74 @@
+name: imx93-frdm
+version: '2025.10-rc4'
+summary: U-Boot gadget for fdrm-imx93
+description: U-Boot gadget for fdrm-imx93
+base: core24
+confinement: strict
+type: gadget
+
+parts:
+  imx-atf:
+    source: https://github.com/nxp-imx/imx-atf.git
+    source-commit: 6adc4c6f6d9e8bb647aa5b30112d0ce264900052
+    plugin: nil
+    override-build: |
+      make PLAT=imx93 bl31
+      install -Dm644 -t "${CRAFT_PART_INSTALL}" build/imx93/release/bl31.bin
+    prime:
+      - -bl31.bin
+
+  firmware-imx:
+    source: https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/firmware-imx-8.21.bin
+    source-type: file
+    source-checksum: sha256/c3447f0f813415ccea9dc2ef12080cb3ac8bbc0c67392a74fc7d59205eb5a672
+    plugin: nil
+    override-build: |
+      install -Dm644 -t "${CRAFT_PART_INSTALL}" firmware-imx-8.21.bin
+    prime:
+      - -firmware-imx-8.21.bin
+
+  firmware-sentinel:
+    source: https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/firmware-sentinel-0.11.bin
+    source-type: file
+    source-checksum: sha256/269480417a8ae9aa4cc4101ab947287fc33455a931021dbdc4d9badb5212bceb
+    plugin: nil
+    override-build: |
+      install -Dm644 -t "${CRAFT_PART_INSTALL}" firmware-sentinel-0.11.bin
+    prime:
+      - -firmware-sentinel-0.11.bin
+
+  u-boot:
+    after:
+      - imx-atf
+      - firmware-sentinel
+      - firmware-imx
+    build-packages:
+      - swig
+      - bison
+      - flex
+      - libssl-dev
+      - libgnutls28-dev
+    source: https://gitlab.com/u-boot/u-boot.git
+    source-commit: 7a4f3c5652157cbb3d26a7728bfe537ea483efc9
+    plugin: nil
+    override-pull: |
+      craftctl default
+      cp "${CRAFT_STAGE}"/*.bin .
+
+    override-build: |
+      make imx93_frdm_defconfig
+      make all
+      install -Dm644 -t "${CRAFT_PART_INSTALL}" flash.bin
+
+  script:
+    build-packages:
+      - u-boot-tools
+    plugin: nil
+    source: .
+    override-build: |
+      mkimage -T script -d boot.script boot.scr
+      install -Dm644 -t "${CRAFT_PART_INSTALL}" boot.scr
+
+  static:
+    plugin: dump
+    source: ./static
